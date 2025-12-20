@@ -1,0 +1,21 @@
+# 编译生成文件
+*.exe
+*.o
+*.obj
+
+# 临时文件
+*.tmp
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# VS / Windows
+.vscode/
+.vs/
+*.user
+
+# AST / 输出文件（可选）
+ast.png
+ast.dot
