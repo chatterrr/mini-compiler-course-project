@@ -1,19 +1,163 @@
-int a = 3;
-float b = 2.5;
+// 编译器功能测试 Demo
 
-while (a < 10) {
-    a = a + 1;
+// 1.基本变量声明
+int a=10;
+float b=3.14;
+bool flag=true;
+char ch='A';
+
+// 2.常量声明
+const int MAX=100;
+const float PI=3.14;
+
+// 3.基本算术运算（支持+ - * / %）
+int sum=a+5;
+int diff=a-3;
+int mul=a*2;
+int div=a/2;
+int mod=a%3;
+
+// 4.复合赋值运算符
+a+=3;// a = a + 3
+a-=2;// a = a - 2
+a*=4;// a = a * 4
+a/=2;// a = a / 2
+a%=3;// a = a % 3
+
+// 5.自增自减运算符
+int count=0;
+count++;// 后缀自增
+++count;// 前缀自增
+count--;// 后缀自减
+--count;// 前缀自减
+
+// 6.关系运算符
+bool cmp1=a>b;
+bool cmp2=a<b;
+bool cmp3=a==b;
+bool cmp4=a!=b;
+bool cmp5=a>=b;
+bool cmp6=a<=b;
+
+// 7.逻辑运算符
+bool andResult=true&&false;
+bool orResult=true||false;
+bool notResult=!true;
+
+// 8.三元条件运算符
+int x=5;
+int y=10;
+int max=(x>y)?x:y;
+
+// 9.if-else语句
+if(a>0){
+    a=a+1;
+}else{
+    a=a-1;
 }
 
-for (int i = 0; i < 3; i = i + 1) {
-    b = b + i;
+// 10.while循环
+int i=0;
+while(i<5){
+    i=i+1;
 }
 
-if (a > b) {
-    a = a - 1;
-} else {
-    b = b - 1.0;
+// 11.do-while循环
+int j=0;
+do{
+    j=j+1;
+}while(j<3);
+
+// 12.for循环
+for(int k=0;k<5;k=k+1){
+    int temp=k*2;
 }
 
-return a;
+// 13.switch-case语句
+int day=3;
+switch(day){
+    case 1:
+        print("Monday");
+        break;
+    case 2:
+        print("Tuesday");
+        break;
+    case 3:
+        print("Wednesday");
+        break;
+    default:
+        print("Other day");
+        break;
+}
 
+// 14.break语句
+for(int n=0;n<10;n=n+1){
+    if(n==5){
+        break;
+    }
+}
+
+// 15.continue语句
+for(int m=0;m<5;m=m+1){
+    if(m==2){
+        continue;
+    }
+}
+
+// 16.块作用域
+{
+    int innerVar=50;
+    innerVar=innerVar+10;
+}
+
+// 17.print函数
+print("测试开始");
+print("a =",a);
+print("b =",b);
+print("sum =",sum);
+print("max =",max);
+
+// 18.字符字面量
+char grade='B';
+print("Grade:",grade);
+
+// 19.字符串字面量
+print("Hello, World!");
+
+// 20.布尔字面量
+bool isDone=false;
+if(!isDone){
+    print("任务未完成");
+}
+
+// 21.类型转换（隐式转换）
+int intVal=10;
+float floatVal=5.5;
+float mixed=intVal+floatVal;// int自动转换为float
+
+// 22.嵌套if-else
+if(a>0){
+    if(b>0){
+        print("a和b都大于0");
+    }else{
+        print("a大于0，b不大于0");
+    }
+}else{
+    print("a不大于0");
+}
+
+// 23.复杂表达式
+int result=(a+b)*2-(a/b);
+print("复杂表达式结果:",result);
+
+// 24.复合条件
+if(a>0&&b>0){
+    print("a和b都大于0");
+}
+
+if(a>0||b>0){
+    print("a或b大于0");
+}
+
+// 25.测试完成
+print("=== 所有功能测试完成 ===");
