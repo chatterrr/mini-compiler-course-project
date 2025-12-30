@@ -518,7 +518,7 @@ class Parser {
         throw std::runtime_error(errorAt(peek(), msg));
     }
 
-    std::string errorAt(const Token& tok, const std::string& msg) {
+    std::string errorAt(const Token& tok, const std::string& msg) const {
         std::ostringstream oss;
         oss << "语法错误 (line " << tok.line << ", col " << tok.column << "): " << msg << "，发现 '" << tok.lexeme
             << "'";
@@ -1200,7 +1200,12 @@ class Parser {
         ExprResult left = multiplicative();
         while (match(TokenType::Operator, "+") || match(TokenType::Operator, "-")) {
             std::string op = previous().lexeme;
+            const Token& opTok = previous();
             ExprResult right = multiplicative();
+
+            // 严格类型：算术运算仅允许数值类型（int/float/char）
+            requireNumericBinary(opTok, left, right);
+
             ValueType resType = promote(left.type, right.type);
             ExprResult lCast = cast(left, resType);
             ExprResult rCast = cast(right, resType);
@@ -1219,7 +1224,16 @@ class Parser {
         ExprResult left = unary();
         while (match(TokenType::Operator, "*") || match(TokenType::Operator, "/") || match(TokenType::Operator, "%")) {
             std::string op = previous().lexeme;
+            const Token& opTok = previous();
             ExprResult right = unary();
+
+            // 严格类型：乘除与取模仅允许数值类型（int/float/char）
+            requireNumericBinary(opTok, left, right);
+            if (op == "%") {
+                // '%' 仅允许整型/字符型
+                requireIntegralBinary(opTok, left, right);
+            }
+
             ValueType resType = promote(left.type, right.type);
             ExprResult lCast = cast(left, resType);
             ExprResult rCast = cast(right, resType);
@@ -1250,7 +1264,12 @@ class Parser {
             
             std::string varName = rhs.expr->value;
             ValueType varType = rhs.type;
-            
+
+            // 严格类型：自增/自减仅允许数值类型（int/float/char）
+            if (!isNumeric(varType)) {
+                throw std::runtime_error(errorAt(opTok, "自增/自减运算符只能用于数值类型变量，当前为 " + typeName(varType)));
+            }
+
             // 检查是否为常量
             if (symbols.isConst(varName, opTok.line, opTok.column)) {
                 throw std::runtime_error("不能修改常量 '" + varName + "'");
@@ -1328,7 +1347,12 @@ class Parser {
                 
                 std::string varName = expr.expr->value;
                 ValueType varType = expr.type;
-                
+
+                // 严格类型：自增/自减仅允许数值类型（int/float/char）
+                if (!isNumeric(varType)) {
+                    throw std::runtime_error(errorAt(opTok, "自增/自减运算符只能用于数值类型变量，当前为 " + typeName(varType)));
+                }
+
                 // 检查是否为常量
                 if (symbols.isConst(varName, opTok.line, opTok.column)) {
                     throw std::runtime_error("不能修改常量 '" + varName + "'");
@@ -1438,34 +1462,39 @@ class Parser {
     }
 
     ExprResult ensureBool(const ExprResult& expr) {
+        // 采用“严格布尔”语义：if/while 等条件表达式必须是 bool
         if (expr.type == ValueType::Bool) return expr;
         if (expr.type == ValueType::Void) {
             throw std::runtime_error(errorAt(previous(), "void 类型不能作为条件表达式"));
         }
-        ExprResult result = {code.newTemp(ValueType::Bool), ValueType::Bool, nullptr};
-        std::string zero;
-        switch (expr.type) {
-            case ValueType::Int: zero = "0"; break;
-            case ValueType::Float: zero = "0.0"; break;
-            case ValueType::Char: zero = "0"; break;
-            case ValueType::String: zero = ""; break;
-            case ValueType::Bool: zero = "0"; break;
-            default: zero = "0"; break;
-        }
-        code.emit("!=", expr.place, zero, result.place);
-        auto boolNode = std::make_shared<ASTNode>(ASTNodeType::BinaryOp, "!=", ValueType::Bool,
-                                                 expr.expr ? expr.expr->line : 0,
-                                                 expr.expr ? expr.expr->column : 0);
-        if (expr.expr) boolNode->children.push_back(expr.expr);
-        auto zeroNode = std::make_shared<ASTNode>(ASTNodeType::Literal, zero, expr.type,
-                                                 expr.expr ? expr.expr->line : 0,
-                                                 expr.expr ? expr.expr->column : 0);
-        boolNode->children.push_back(zeroNode);
-        result.expr = boolNode;
-        return result;
+        throw std::runtime_error(
+            errorAt(previous(), "条件表达式类型错误：必须为 bool，当前为 " + typeName(expr.type)));
     }
 
-    ValueType promote(ValueType a, ValueType b) {
+    
+    bool isNumeric(ValueType t) const {
+        return t == ValueType::Int || t == ValueType::Float || t == ValueType::Char;
+    }
+
+    bool isIntegral(ValueType t) const {
+        return t == ValueType::Int || t == ValueType::Char;
+    }
+
+    void requireNumericBinary(const Token& opTok, const ExprResult& l, const ExprResult& r) const {
+        if (!isNumeric(l.type) || !isNumeric(r.type)) {
+            throw std::runtime_error(errorAt(opTok,
+                "算术运算符 '" + opTok.lexeme + "' 的操作数类型非法: " + typeName(l.type) + " 与 " + typeName(r.type)));
+        }
+    }
+
+    void requireIntegralBinary(const Token& opTok, const ExprResult& l, const ExprResult& r) const {
+        if (!isIntegral(l.type) || !isIntegral(r.type)) {
+            throw std::runtime_error(errorAt(opTok,
+                "取模运算符 '%' 仅支持整型/字符型操作数: " + typeName(l.type) + " 与 " + typeName(r.type)));
+        }
+    }
+
+ValueType promote(ValueType a, ValueType b) {
         if (a == ValueType::String || b == ValueType::String) {
             throw std::runtime_error("字符串类型不支持算术运算");
         }
