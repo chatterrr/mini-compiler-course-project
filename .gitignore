@@ -3,6 +3,11 @@
 *.o
 *.obj
 
+# CMake / 构建目录
+build/
+CMakeFiles/
+CMakeCache.txt
+
 # 临时文件
 *.tmp
 *.log
